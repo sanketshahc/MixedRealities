@@ -26,6 +26,8 @@
       const cursor = document.querySelector('#cursor');
       const walker = document.querySelector('#walker');
       const stringify = AFRAME.utils.coordinates.stringify;
+      
+
 
       function onSceneLoaded(){
         raycaster.addEventListener('raycaster-intersection', (event) => {
@@ -33,12 +35,29 @@
           console.log('int.point:', point)
           cursor.setAttribute('position', point);
         });
-        
-        raycaster.addEventListener('click', () => {
-          let {point} = raycaster.components.cursor.intersection;
-          console.log('dest.point', point);
-          walker.setAttribute('position', point);
-         });
+      let isInitial = true;
+      raycaster.addEventListener('click', () => {
+        let {point} = raycaster.components.cursor.intersection;
+        // because position attr is a string, we dive into the three.js prop (computationally faster)
+        console.log('walker vector3d',walker.object3D.position);
+        console.log('initial?', isInitial);
+        let distanceVector3d = walker.object3D.position.distanceTo(point);
+        let walkDuration = distanceVector3d * 5000;
+        console.log('dest.point', point);
+      
+        if (isInitial) {
+          walker.setAttribute('position', point)
+          isInitial = false;
+        } else {
+            let animation = document.createElement('a-animation');
+            animation.setAttribute('attribute','position');
+            console.log('to', stringify(point))
+            animation.setAttribute('to', stringify(point));
+            animation.setAttribute('dur', walkDuration);
+            animation.setAttribute('easing','ease-in-bounce');
+            walker.appendChild(animation);
+        }
+      });
       }
       scene.addEventListener('loaded', onSceneLoaded);
     </script>
