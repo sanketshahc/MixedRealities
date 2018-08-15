@@ -15,7 +15,10 @@
       <a-assets>
         <a-asset id="cesium-man" src="models/CesiumMan.glb"></a-asset>
       </a-assets>
-      <a-entity id="walker" gltf-model="#cesium-man" scale="0.25 0.25 0.25" rotation="0 -90 0" animation-mixer>
+      <!-- lifting up entity -->
+      <a-entity id="walker">
+        <a-entity gltf-model="#cesium-man" scale="0.25 0.25 0.25" rotation="0 -90 0" animation-mixer>
+      </a-entity>
     </a-entity>
     <a-ring id="cursor" color="teal" radius-inner="0.04" radius-outer="0.05" position="0 -3 -3" rotation="-90 0 0"></a-ring>
   </a-scene>
@@ -26,8 +29,6 @@
       const cursor = document.querySelector('#cursor');
       const walker = document.querySelector('#walker');
       const stringify = AFRAME.utils.coordinates.stringify;
-      
-
 
       function onSceneLoaded(){
         raycaster.addEventListener('raycaster-intersection', (event) => {
@@ -49,12 +50,13 @@
           walker.setAttribute('position', point)
           isInitial = false;
         } else {
+            walker.object3D.lookAt(point);
             let animation = document.createElement('a-animation');
             animation.setAttribute('attribute','position');
-            console.log('to', stringify(point))
+            console.log('walking to', stringify(point))
             animation.setAttribute('to', stringify(point));
             animation.setAttribute('dur', walkDuration);
-            animation.setAttribute('easing','ease-in-bounce');
+            animation.setAttribute('easing','ease-out');
             walker.appendChild(animation);
         }
       });
