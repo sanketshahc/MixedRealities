@@ -38,20 +38,14 @@
         <a-entity 
           id="Bit"
           gltf-model="#bit" 
-          scale="1.5 1.5 1.5" 
+          scale="1.2 1.2 1.2" 
           rotation="0 -20 0" 
           animation-mixer="clip: IdleLong;">
-            <a-animation 
-              begin = "walkTrigger" 
-              attribute = "position" 
-              to = "2.5 2.75 -5" 
-              dur = "5000" 
-              easing = "ease-out">
-            </a-animation>
+            
         </a-entity>
         <a-plane 
-          width=".5" 
-          height=".5" 
+          width="2" 
+          height="2" 
           rotation="-90 0 0"
           shadow="receive: true" 
           shadow-material>
@@ -85,21 +79,39 @@
 // animation-loop	Emitted when a single loop of the animation clip has finished.
 // animation-finished	 Emitted when all loops of an animation clip have finished.
 
-/*
-    function animate(animation) {
-        let animation = animation.toLowerCase()
-        if (animation === 'jump') {
+
+    function animate(animateComm) {
+          // debugger
+        console.log('passed through command', animateComm)
+        let animateCommand = animateComm.toLowerCase()
+        if (animateCommand === 'jump') {
+          bit.setAttribute('animation-mixer', 'clip: jump;loop: once')
+          const listener = () => {
+            bit.setAttribute('animation-mixer', 'clip: IdleLong;loop: repeat');
+            bit.removeEventListener('animation-finished');
+          };
+          bit.addEventListener('animation-finished', listener);
+
+          // bit.addEventListener('animation-finished',
+          //       () => {
+          //       // debugger                  
+          //       bit.setAttribute('animation-mixer', 'clip: IdleLong;')
+                
           // set mixer clip prop to this clip
           // set repeat to once
           // on finish, set to idle
-        } else if (animation === 'sit') {
+        return} else {
+          // bit.setAttribute('animation-mixer', 'clip: IdleLong;')
+        return}
+        // else if (animateComm === 'sit') {
           // set mixer clip prop to this clip
           // set repeat to IdleToSit clip, then listen for finished event, then change clip to sitIdleLong
           // set loop for idle sitting 
           // set a global sit variable to true
-        } else if (animation === 'run' && walking is true) {
+        // } else if (animateComm === 'run' && walking is true) {
+        //   // add the walking animateComm from below (lift itout)
+        // }
 
-        }
          // run
         // jump
         // SitIdleLong - triggered after idle to sit (auxillary)
@@ -107,7 +119,7 @@
         // IdleToSit
         // IdleLong - default
       }
-    */  
+     
       function onSceneLoaded() {
         raycaster.addEventListener('raycaster-intersection', (event) => {
           let {point} = event.detail.intersections[0];
@@ -120,7 +132,7 @@
           // because position attr is a string, we dive into the three.js prop (computationally faster)
           let {point} = raycaster.components.cursor.intersection;
           let distanceVector3d = bit.object3D.position.distanceTo(point);
-          let walkDuration = distanceVector3d * 5000;
+          let walkDuration = distanceVector3d * 2000;
           // let visibility = dog.getAttribute('visible')
 
           // console.log('visibility', visibility)
@@ -131,17 +143,27 @@
           //   dog.setAttribute('position', stringify(point))
           //   dog.setAttribute('visibile', true)
           // } else {
-              bit.object3D.lookAt(point);
-              let animation = document.querySelector('a-animation');
+
+            
+              dog.object3D.lookAt(point);
+              // let animation = document.querySelector('a-animation');
+              let animation = document.createElement('a-animation');
               console.log('element',animation)
               console.log('walking to', stringify(point))
               animation.setAttribute('to', stringify(point));
               animation.setAttribute('dur', walkDuration);
+              animation.setAttribute('attribute', 'position');
+              animation.setAttribute('easing', 'ease-out');
+            // marker.setAttribute('color', 'blue');
+            // setTimeout(() => marker.setAttribute('color', 'green'), 350);
+              dog.appendChild(animation);
                 // why object notation?
               // if sitting is true, setattr to sit to idle, single loop, and on finish event, do the next line, else do the next 2 lines.
-              bit.setAttribute('animation-mixer', 'clip: walk');
+              bit.setAttribute('animation-mixer', 'clip: walk;');
+              animation.addEventListener('animationend',
+                () => bit.setAttribute('animation-mixer', 'clip: IdleLong;'));
               // debugger;
-              bit.emit('walkTrigger')
+              // dog.emit('walkTrigger')
               // change walking variable to true when return to idle
         // }
       });
@@ -165,16 +187,19 @@
             };
 
             Object.keys(animations).forEach((key)=>{
-              if (command.search(key.toLowerCase())) {
-                animate(animations[key])  
+              if (command.includes(key.toLowerCase())) {
+                let item = animations[key];
+                console.log('matched key:', key, item)
+                animate(item)  
               }
               return
             })
         }
 
         try {
-            window.speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new speech();
+            // window.speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+            // const recognition = new speech();
+            recognition = new webkitSpeechRecognition();
             recognition.continuous = true;
             recognition.maxAlternatives = 1;
               // put the received data through the machine, on an 'result' event trigger. 
