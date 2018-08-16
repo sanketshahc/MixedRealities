@@ -6,62 +6,220 @@
     <script src="https://rawgit.com/chenzlabs/three.ar.js/0f645a5/dist/three.ar.min.js"></script>
     <script src="https://rawgit.com/chenzlabs/aframe-ar/0cf8d5a/dist/aframe-ar.min.js"></script>
     <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/cfe5f316/dist/aframe-extras.js"></script>
-      
+    <script>
+      // don't totally understand the material component construction;
+    AFRAME.registerComponent('shadow-material', {
+      init() {
+        this.material = new THREE.ShadowMaterial();
+        this.el.getOrCreateObject3D('mesh').material = this.material;
+        this.material.opacity = .3;
+      }
+    })
+    </script>
   </head>
-
   <body>
     <a-scene ar>
-      <a-camera ar-raycaster raycaster cursor="fuse:false"></a-camera>
-      <a-assets>
-        <a-asset id="cesium-man" src="models/CesiumMan.glb"></a-asset>
+      <a-camera 
+        ar-raycaster 
+        raycaster 
+        cursor="fuse:false">
+      </a-camera>
+      <a-assets 
+        timeout="11000">
+        <a-asset-item 
+          id="bit" 
+          src="models/pitbull.glb">
+        </a-asset-item>
       </a-assets>
       <!-- lifting up entity -->
-      <a-entity id="walker">
-        <a-entity gltf-model="#cesium-man" scale="0.25 0.25 0.25" rotation="0 -90 0" animation-mixer>
+      <a-entity 
+        id="Dog" 
+        visible= "true"
+        position= "1 -1.5 -1.5" >
+        <a-entity 
+          gltf-model="#bit" 
+          scale="1.5 1.5 1.5" 
+          rotation="0 -20 0" 
+          animation-mixer="clip: IdleLong;">
+            <a-animation 
+              begin = "walkTrigger" 
+              attribute = "position" 
+              to = "" 
+              dur = "" 
+              easing = "ease-out">
+            </a-animation>
+        </a-entity>
+        <a-plane 
+          width=".5" 
+          height=".5" 
+          rotation="-90 0 0"
+          shadow="receive: true" 
+          shadow-material>
+        </a-plane>
       </a-entity>
-    </a-entity>
-    <a-ring id="cursor" color="teal" radius-inner="0.04" radius-outer="0.05" position="0 -3 -3" rotation="-90 0 0"></a-ring>
+    <a-ring 
+      id="cursor" 
+      color="red" 
+      radius-inner="0.04" 
+      radius-outer="0.05" 
+      position="0 -3 -3" 
+      rotation="-90 0 0">
+    </a-ring>
   </a-scene>
   
   <script>
       const scene = document.querySelector('a-scene');
       const raycaster = document.querySelector('[ar-raycaster]');
       const cursor = document.querySelector('#cursor');
-      const walker = document.querySelector('#walker');
+      const dog = document.querySelector('#Dog');
       const stringify = AFRAME.utils.coordinates.stringify;
 
-      function onSceneLoaded(){
+      // put the animate funtion here.choose which animation.
+      function animate(animation) {
+        // change clip to 'animation'
+      }
+
+      function onSceneLoaded() {
+        // function activateFox() {
+            // fox = document.querySelector('#fox');
+            // idleAnimation = 'Fox_Idle';
+            // walkAnimation = 'Fox_Run';
+        // }
         raycaster.addEventListener('raycaster-intersection', (event) => {
           let {point} = event.detail.intersections[0];
           console.log('int.point:', point)
           cursor.setAttribute('position', point);
         });
-      let isInitial = true;
-      raycaster.addEventListener('click', () => {
-        let {point} = raycaster.components.cursor.intersection;
-        // because position attr is a string, we dive into the three.js prop (computationally faster)
-        console.log('walker vector3d',walker.object3D.position);
-        console.log('initial?', isInitial);
-        let distanceVector3d = walker.object3D.position.distanceTo(point);
-        let walkDuration = distanceVector3d * 5000;
-        console.log('dest.point', point);
-      
-        if (isInitial) {
-          walker.setAttribute('position', point)
-          isInitial = false;
-        } else {
-            walker.object3D.lookAt(point);
-            let animation = document.createElement('a-animation');
-            animation.setAttribute('attribute','position');
-            console.log('walking to', stringify(point))
-            animation.setAttribute('to', stringify(point));
-            animation.setAttribute('dur', walkDuration);
-            animation.setAttribute('easing','ease-out');
-            walker.appendChild(animation);
+
+        // have a minimum distance to continue.
+        raycaster.addEventListener('click', () => {
+          // because position attr is a string, we dive into the three.js prop (computationally faster)
+          let {point} = raycaster.components.cursor.intersection;
+          let distanceVector3d = dog.object3D.position.distanceTo(point);
+          let walkDuration = distanceVector3d * 5000;
+          let visibility = dog.getAttribute('visible')
+          
+          console.log('dog.vectorOrigin', dog.object3D.position);
+          console.log('dest.point', point);
+        
+          if (!visibile) {
+            dog.setAttribute('position', stringify(point))
+            dog.setAttribute('visibility', true)
+          } else {
+              dog.object3D.lookAt(point);
+              // let animation = document.createElement('a-animation');
+              // animation.setAttribute('attribute','position');
+              console.log('walking to', stringify(point))
+              animation.setAttribute('to', stringify(point));
+              animation.setAttribute('dur', walkDuration);
+              // animation.setAttribute('easing','ease-out');
+              // dog.appendChild(animation);
+              dog.emit('walkTrigger')
         }
       });
       }
-      scene.addEventListener('loaded', onSceneLoaded);
+
+      // Pull out transcript logic and just make this a helper
+      function onCommand(command) {
+            recognition.start();
+            console.log(command)
+
+            if (command.search('Come')) {
+              // function to arrive at x/z coordinate
+            }
+            
+            // a better alternative here would be to establish a grammer list of the keys...rather than having it be anything. but whatever.
+            const animations = {
+                'Get up': 'SitToIdle',
+                'Jump': 'jump',
+                'Sit': 'IdleToSit',
+                'Run': 'run',
+            };
+
+            Object.keys(animations).forEach((key)=>{
+              if (command.search(key.toLowerCase())) {
+                animate(animations[key])  
+              }
+              return
+            })
+            // for (const animationKey of Object.keys(animations)) {
+            //     if (transcript.toLowerCase().includes(animationKey.toLowerCase())) {
+            //         playAnimation(animations[animationKey]);
+            //         return;
+            //     }
+            //   }
+        }
+
+        try {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.maxAlternatives = 1;
+            // put the received data through the machine, on an 'result' event trigger. 
+            // assuming that the default behavior for on result is to stop listening
+            // ...which is why to start it in the result callback?
+            recognition.onresult = (event) => {
+              let last = event.results.length - 1;
+              let command = event.results[last][0].transcript;
+              console.log('command heard:', command)
+              onCommand(command)
+            }
+            recognition.onerror = () => setTimeout(() => recognition.start(), 500);
+            recognition.start();
+        } catch (err) { 
+            console.error(err.message);}
+
+        scene.addEventListener('loaded', onSceneLoaded);
+
+
+      // animation names:
+      // walk
+      // run
+      // jump
+      // SitIdleLong - triggered after idle to sit (auxillary)
+      // SitScratch - triggered after idle to sit (auxillary ani)
+      // SitToIdle
+      // IdleLong - default
+      // IdleToSit
+
+
+      // Gallop#
+      // Trot##
+      // WalkSniff##
+      // IdleSniff
+      // IdleDig##
+      // idle##
+      // IdleMouthClosed##
+      // IdleBarking##
+      // IdleBarkingLong##
+      // SitIdle##
+      // SitToLay##
+      // LayIdle##
+      // LayIdleLong##
+      // LayRest##
+      // LayToIdle##
+      // IdleToLay##
+      // LayToSit##
+      // WipeAss##
+      // Death##
+      // Piss##
+      // Poop##
+      // IdleToConsume##
+      // Eat##
+      // Drink##
+      // ConsumeToIdle##
+      // IdleToAggressive##
+      // AggressiveIdle##
+      // AggressiveBarking##
+      // AggressiveAttack##
+      // AggressiveAttack2##
+      // AggressiveBeingHit##
+      // AggressiveBeingHit2##
+      // AggressiveBeingHit3##
+      // AggressiveToIdle##
+      
     </script>
   </body>
 </html>
+
+
+
