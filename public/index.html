@@ -35,7 +35,7 @@
       <a-entity 
         id="Dog" 
         visible= "true"
-        position= "1 -1.5 -1.5" >
+        position= ".7 -1.5 -1.5" >
         <a-entity 
           gltf-model="#bit" 
           scale="1.5 1.5 1.5" 
@@ -98,22 +98,25 @@
           let distanceVector3d = dog.object3D.position.distanceTo(point);
           let walkDuration = distanceVector3d * 5000;
           let visibility = dog.getAttribute('visible')
-          
+
+          console.log('visibility', visibility)
           console.log('dog.vectorOrigin', dog.object3D.position);
           console.log('dest.point', point);
         
-          if (!visibile) {
+          if (!visibility) {
             dog.setAttribute('position', stringify(point))
-            dog.setAttribute('visibility', true)
+            dog.setAttribute('visibile', true)
           } else {
               dog.object3D.lookAt(point);
-              // let animation = document.createElement('a-animation');
-              // animation.setAttribute('attribute','position');
+              let animation = document.querySelector('a-animation');
+                // animation.setAttribute('attribute','position');
               console.log('walking to', stringify(point))
               animation.setAttribute('to', stringify(point));
               animation.setAttribute('dur', walkDuration);
-              // animation.setAttribute('easing','ease-out');
-              // dog.appendChild(animation);
+                // animation.setAttribute('easing','ease-out');
+                // dog.appendChild(animation);
+                // why object notation?
+              dog.setAttribute('animation-mixer', 'clip: walk');
               dog.emit('walkTrigger')
         }
       });
@@ -142,21 +145,16 @@
               }
               return
             })
-            // for (const animationKey of Object.keys(animations)) {
-            //     if (transcript.toLowerCase().includes(animationKey.toLowerCase())) {
-            //         playAnimation(animations[animationKey]);
-            //         return;
-            //     }
-            //   }
         }
 
         try {
-            recognition = new webkitSpeechRecognition();
+            window.speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new speech();
             recognition.continuous = true;
             recognition.maxAlternatives = 1;
-            // put the received data through the machine, on an 'result' event trigger. 
-            // assuming that the default behavior for on result is to stop listening
-            // ...which is why to start it in the result callback?
+              // put the received data through the machine, on an 'result' event trigger. 
+              // assuming that the default behavior for on result is to stop listening
+              // ...which is why to start it in the result callback?
             recognition.onresult = (event) => {
               let last = event.results.length - 1;
               let command = event.results[last][0].transcript;
