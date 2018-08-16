@@ -34,9 +34,9 @@
       <!-- lifting up entity -->
       <a-entity 
         id="Dog" 
-        visible= "true"
         position= ".7 -1.5 -1.5" >
         <a-entity 
+          id="Bit"
           gltf-model="#bit" 
           scale="1.5 1.5 1.5" 
           rotation="0 -20 0" 
@@ -44,8 +44,8 @@
             <a-animation 
               begin = "walkTrigger" 
               attribute = "position" 
-              to = "" 
-              dur = "" 
+              to = "2.5 2.75 -5" 
+              dur = "5000" 
               easing = "ease-out">
             </a-animation>
         </a-entity>
@@ -73,52 +73,77 @@
       const cursor = document.querySelector('#cursor');
       const dog = document.querySelector('#Dog');
       const stringify = AFRAME.utils.coordinates.stringify;
-
+      const bit = document.querySelector('#Bit');
+      let sitting;
+      let walking;
       // put the animate funtion here.choose which animation.
-      function animate(animation) {
-        // change clip to 'animation'
-      }
+     
+// for transitions: 
+// animationend	Emitted when the animation finishes. In case of repeats, emitted when the repeat count reaches 0. Not emitted for indefinite repeats.
+// animationstart	Emitted immediately when the animation begins playing.
+// for clips:
+// animation-loop	Emitted when a single loop of the animation clip has finished.
+// animation-finished	 Emitted when all loops of an animation clip have finished.
 
+/*
+    function animate(animation) {
+        let animation = animation.toLowerCase()
+        if (animation === 'jump') {
+          // set mixer clip prop to this clip
+          // set repeat to once
+          // on finish, set to idle
+        } else if (animation === 'sit') {
+          // set mixer clip prop to this clip
+          // set repeat to IdleToSit clip, then listen for finished event, then change clip to sitIdleLong
+          // set loop for idle sitting 
+          // set a global sit variable to true
+        } else if (animation === 'run' && walking is true) {
+
+        }
+         // run
+        // jump
+        // SitIdleLong - triggered after idle to sit (auxillary)
+        // SitToIdle
+        // IdleToSit
+        // IdleLong - default
+      }
+    */  
       function onSceneLoaded() {
-        // function activateFox() {
-            // fox = document.querySelector('#fox');
-            // idleAnimation = 'Fox_Idle';
-            // walkAnimation = 'Fox_Run';
-        // }
         raycaster.addEventListener('raycaster-intersection', (event) => {
           let {point} = event.detail.intersections[0];
           console.log('int.point:', point)
           cursor.setAttribute('position', point);
         });
-
+       
         // have a minimum distance to continue.
         raycaster.addEventListener('click', () => {
           // because position attr is a string, we dive into the three.js prop (computationally faster)
           let {point} = raycaster.components.cursor.intersection;
-          let distanceVector3d = dog.object3D.position.distanceTo(point);
+          let distanceVector3d = bit.object3D.position.distanceTo(point);
           let walkDuration = distanceVector3d * 5000;
-          let visibility = dog.getAttribute('visible')
+          // let visibility = dog.getAttribute('visible')
 
-          console.log('visibility', visibility)
+          // console.log('visibility', visibility)
           console.log('dog.vectorOrigin', dog.object3D.position);
           console.log('dest.point', point);
         
-          if (!visibility) {
-            dog.setAttribute('position', stringify(point))
-            dog.setAttribute('visibile', true)
-          } else {
-              dog.object3D.lookAt(point);
+          // if (!visibility) {
+          //   dog.setAttribute('position', stringify(point))
+          //   dog.setAttribute('visibile', true)
+          // } else {
+              bit.object3D.lookAt(point);
               let animation = document.querySelector('a-animation');
-                // animation.setAttribute('attribute','position');
+              console.log('element',animation)
               console.log('walking to', stringify(point))
               animation.setAttribute('to', stringify(point));
               animation.setAttribute('dur', walkDuration);
-                // animation.setAttribute('easing','ease-out');
-                // dog.appendChild(animation);
                 // why object notation?
-              dog.setAttribute('animation-mixer', 'clip: walk');
-              dog.emit('walkTrigger')
-        }
+              // if sitting is true, setattr to sit to idle, single loop, and on finish event, do the next line, else do the next 2 lines.
+              bit.setAttribute('animation-mixer', 'clip: walk');
+              // debugger;
+              bit.emit('walkTrigger')
+              // change walking variable to true when return to idle
+        // }
       });
       }
 
@@ -176,8 +201,8 @@
       // SitIdleLong - triggered after idle to sit (auxillary)
       // SitScratch - triggered after idle to sit (auxillary ani)
       // SitToIdle
-      // IdleLong - default
       // IdleToSit
+      // IdleLong - default
 
 
       // Gallop#
